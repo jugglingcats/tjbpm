@@ -46,6 +46,7 @@ public class BasicTests extends DefaultProcessEventListener {
         ksession.addEventListener(this);
 
         ProcessInstance processInstance = ksession.startProcess("test");
+        ksession.getWorkItemManager().completeWorkItem(1, null);
         NodeInstanceContainer container= (NodeInstanceContainer) processInstance;
         for ( NodeInstance s : container.getNodeInstances() ) {
             System.out.println("Active node: "+s.getNodeName()+", id:" +s.getNodeId());
@@ -57,6 +58,6 @@ public class BasicTests extends DefaultProcessEventListener {
 
     @Override
     public void beforeNodeTriggered(ProcessNodeTriggeredEvent event) {
-        System.out.println(event.getNodeInstance().getNodeName());
+        System.out.println("Before node: "+event.getNodeInstance().getNodeName());
     }
 }

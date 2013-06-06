@@ -11,12 +11,12 @@
         <bpmn2:startEvent id="start" name="start">
             <bpmn2:outgoing>saved</bpmn2:outgoing>
         </bpmn2:startEvent>
-        <bpmn2:task id="saved" name="saved">
+        <bpmn2:manualTask id="saved" name="saved">
             <bpmn2:incoming>save</bpmn2:incoming>
             <bpmn2:incoming>reject</bpmn2:incoming>
             <bpmn2:outgoing>save</bpmn2:outgoing>
             <bpmn2:outgoing>submit</bpmn2:outgoing>
-        </bpmn2:task>
+        </bpmn2:manualTask>
         <bpmn2:manualTask id="published" name="published">
             <bpmn2:incoming>approve</bpmn2:incoming>
         </bpmn2:manualTask>
