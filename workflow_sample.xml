@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?><workflow>
+    <metainfo id="2" type="content">
+        <ancestors/>
+    </metainfo>
+    <roles>
+        <role name="editore"/>
+        <role name="publisher"/>
+        <role name="feed"/>
+    </roles>
+    <states>
+        <state name="pre-born">
+            <role group="ANY" name="editore">
+                <transition name="new" target="created"/>
+            </role>
+            <role group="OWNER" name="feed">
+                <transition name="import" target="saved"/>
+            </role>
+        </state>
+        <state name="created">
+            <role group="OWNER" name="editore">
+                <transition name="save" target="saved"/>
+                <transition name="preview" target="created"/>
+            </role>
+        </state>
+        <state name="saved">
+            <role group="OWNER" name="editore">
+                <transition name="get" target="saved"/>
+                <transition name="view" target="saved"/>
+                <transition name="preview" target="saved"/>
+                <transition name="save" target="saved"/>
+                <transition name="delete" target="deleted"/>
+                <transition name="submit" target="submitted"/>
+            </role>
+            <role group="ANY" name="publisher">
+                <transition name="get" target="saved"/>
+                <transition name="view" target="saved"/>
+                <transition name="preview" target="saved"/>
+                <transition name="save" target="saved"/>
+                <transition name="publish" target="published"/>
+                <transition name="schedule4publish" target="saved"/>
+                <transition name="schedule4unpublish" target="saved"/>
+                <transition name="delete" target="deleted"/>
+            </role>
+        </state>
+        <state name="submitted">
+            <role group="OWNER" name="editore">
+                <transition name="get" target="submitted"/>
+                <transition name="view" target="submitted"/>
+                <transition name="preview" target="submitted"/>
+            </role>
+            <role group="ANY" name="publisher">
+                <transition name="get" target="submitted"/>
+                <transition name="view" target="submitted"/>
+                <transition name="preview" target="submitted"/>
+                <transition name="save" target="saved"/>
+                <transition name="publish" target="published"/>
+                <transition name="schedule4publish" target="submitted"/>
+                <transition name="schedule4unpublish" target="submitted"/>
+                <transition name="delete" target="deleted"/>
+                <transition name="reject" target="rejected"/>
+            </role>
+        </state>
+        <state name="rejected">
+            <role group="OWNER" name="editore">
+                <transition name="get" target="rejected"/>
+                <transition name="view" target="rejected"/>
+                <transition name="preview" target="rejected"/>
+                <transition name="save" target="saved"/>
+                <transition name="delete" target="deleted"/>
+            </role>
+            <role group="ANY" name="publisher">
+                <transition name="get" target="rejected"/>
+                <transition name="view" target="rejected"/>
+                <transition name="preview" target="rejected"/>
+                <transition name="save" target="saved"/>
+                <transition name="delete" target="deleted"/>
+            </role>
+        </state>
+        <state name="published">
+            <role group="OWNER" name="editore">
+                <transition name="get" target="published"/>
+                <transition name="view" target="published"/>
+                <transition name="preview" target="published"/>
+                <transition name="save" target="saved"/>
+            </role>
+            <role group="ANY" name="publisher">
+                <transition name="get" target="published"/>
+                <transition name="view" target="published"/>
+                <transition name="preview" target="published"/>
+                <transition name="save" target="saved"/>
+                <transition name="unpublish" target="unpublished"/>
+                <transition name="publish" target="published"/>
+                <transition name="schedule4publish" target="published"/>
+                <transition name="schedule4unpublish" target="published"/>
+            </role>
+        </state>
+        <state name="deleted">
+            <role group="OWNER" name="editore"/>
+        </state>
+        <state name="unpublished">
+            <role group="OWNER" name="editore">
+                <transition name="get" target="unpublished"/>
+                <transition name="view" target="unpublished"/>
+                <transition name="save" target="saved"/>
+                <transition name="delete" target="deleted"/>
+                <transition name="preview" target="unpublished"/>
+            </role>
+            <role group="ANY" name="publisher">
+                <transition name="get" target="unpublished"/>
+                <transition name="view" target="unpublished"/>
+                <transition name="save" target="saved"/>
+                <transition name="delete" target="deleted"/>
+                <transition name="preview" target="unpublished"/>
+                <transition name="publish" target="published"/>
+            </role>
+        </state>
+    </states>
+    <transitions>
+        <trans category="create" name="new" output="new" postaction="none" title="Create new content" visualindex="0">
+            <com name="new"/>
+        </trans>
+        <trans category="edit" name="get" output="get" postaction="none" title="Open content in editing mode" visualindex="2">
+            <com name="get"/>
+        </trans>
+        <trans category="read" name="view" output="get" postaction="none" title="Open content in viewing mode" visualindex="1">
+            <com name="get"/>
+        </trans>
+        <trans category="store" name="save" output="save" postaction="reload" title="Save content" visualindex="3">
+            <com name="save"/>
+            <com name="store"/>
+            <com name="staging"/>
+        </trans>
+        <trans category="show" name="preview" output="preview" postaction="none" title="Preview content" visualindex="5">
+            <com name="preview"/>
+        </trans>
+        <trans category="remove" name="delete" output="delete" postaction="loadsearchform" title="Delete content" visualindex="4">
+			<com name="unstaging">
+				<parameter datatype="string" name="contentItemId" type="client"/>
+				<parameter datatype="string" name="contentTypeId" type="client"/>
+				<parameter datatype="string" name="projectId" type="client"/>
+			</com>
+			<com name="delete"/>
+		</trans>
+        <trans category="approvalFlow" name="submit" output="empty" postaction="loadsearchform" title="Submit content for approving" visualindex="6">
+            <com name="empty"/>
+        </trans>
+        <trans category="approvalFlow" name="reject" output="empty" postaction="loadsearchform" title="Reject content" visualindex="7">
+            <com name="empty"/>
+        </trans>
+        <trans category="approvalFlow" name="publish" output="deployXML" postaction="loadsearchform" title="Publish content" visualindex="8">
+            <com name="deployXML">
+                <parameter name="checkRelatedContents" type="constant" value="true"/>
+                <parameter name="contentItemId" type="client"/>
+                <parameter name="contentTypeId" type="client"/>
+                <parameter name="projectId" type="client"/>
+                <parameter name="relatedContentsStatus" type="constant" value="published"/>
+                <parameter name="servergroup" type="constant" value="1"/>
+            </com>
+            <com name="deployBinaries">
+                <parameter name="contentItemId" type="client"/>
+                <parameter name="contentTypeId" type="client"/>
+                <parameter name="projectId" type="client"/>
+                <parameter name="servergroup" type="constant" value="1"/>
+            </com>
+        </trans>
+        <trans category="approvalFlow" enabled="" name="unpublish" output="undeployXML" postaction="loadsearchform" ref="" title="Unpublish content" visualindex="9">
+            <com name="undeployXML">
+                <parameter name="contentItemId" type="client"/>
+                <parameter name="contentTypeId" type="client"/>
+                <parameter name="projectId" type="client"/>
+                <parameter name="servergroup" type="constant" value="1"/>
+                <parameter name="checkRelatingContents" type="constant" value="false"/>
+                <parameter name="relatingContentsStatus" type="constant" value="published"/>
+            </com>
+            <com name="undeployBinaries">
+                <parameter name="contentItemId" type="client"/>
+                <parameter name="contentTypeId" type="client"/>
+                <parameter name="projectId" type="client"/>
+                <parameter name="servergroup" type="constant" value="1"/>
+            </com>
+        </trans>
+        <trans category="schedule" name="schedule4publish" output="schedule" postaction="reload" ref="publish" title="Schedule publication" visualindex="10">
+            <com name="schedule">
+				<parameter name="projectId" type="client"/>
+				<parameter name="contentTypeId" type="client"/>
+				<parameter name="contentItemId" type="client"/>
+				<parameter name="scheduleTime" type="client"/>
+				<parameter name="scheduleTransition" type="constant" value="publish"/>
+            </com>
+        </trans>
+        <trans category="schedule" name="schedule4unpublish" output="schedule" postaction="reload" ref="unpublish" title="Schedule unpublication" visualindex="11">
+            <com name="schedule">
+				<parameter name="projectId" type="client"/>
+				<parameter name="contentTypeId" type="client"/>
+				<parameter name="contentItemId" type="client"/>
+				<parameter name="scheduleTime" type="client"/>
+				<parameter name="scheduleTransition" type="constant" value="unpublish"/>
+            </com>
+        </trans>
+        <trans category="import" name="import" output="import" postaction="none" title="Import from feed" visualindex="15">
+            <com name="import"/>
+        </trans>
+        <trans category="versioning" name="revision" output="setrevision" postaction="reload" title="Set revision" visualindex="13">
+            <com name="setrevision"/>
+        </trans>
+        <trans category="versioning" name="rollback" output="rollback" postaction="none" title="Rollback" visualindex="14">
+            <com name="rollback"/>
+        </trans>
+        <trans category="versioning" name="version" output="empty" postaction="reload" title="Version" visualindex="12">
+            <com name="version"/>
+            <com name="empty"/>
+        </trans>
+    </transitions>
+</workflow>

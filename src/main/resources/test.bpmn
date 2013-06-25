@@ -14,7 +14,13 @@
             <bpmn2:outgoing>saved</bpmn2:outgoing>
         </bpmn2:startEvent>
 
-        <bpmn2:sequenceFlow id="born" sourceRef="start" targetRef="saved"/>
+        <bpmn2:sequenceFlow id="born" sourceRef="start" targetRef="savedIncoming"/>
+
+        <bpmn2:exclusiveGateway id="savedIncoming" name="savedIncoming" gatewayDirection="Converging">
+            <bpmn2:outgoing>saved</bpmn2:outgoing>
+        </bpmn2:exclusiveGateway>
+
+        <bpmn2:sequenceFlow id="save" sourceRef="savedIncoming" targetRef="saved"/>
 
         <bpmn2:manualTask id="saved" name="saved">
             <bpmn2:outgoing>savedGatewayFlow</bpmn2:outgoing>
@@ -53,7 +59,7 @@
             <bpmn2:outgoing>resubmit</bpmn2:outgoing>
         </bpmn2:manualTask>
 
-        <bpmn2:sequenceFlow sourceRef="review" targetRef="saved"/>
+        <bpmn2:sequenceFlow sourceRef="review" targetRef="savedIncoming"/>
 
         <bpmn2:manualTask id="published" name="published">
             <bpmn2:incoming>approve</bpmn2:incoming>
