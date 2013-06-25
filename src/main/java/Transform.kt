@@ -26,5 +26,10 @@ fun main(args: Array<String>) {
         println("name: ${it.name}, source: ${it.source}, target: ${it.target}")
     }
 
-    val xml =
+    val xml = elem("process") {
+        sorted.forEach {
+            elem("abc")
+        }
+    }
+
 }
