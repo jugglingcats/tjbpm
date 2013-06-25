@@ -28,7 +28,7 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
-            <version>0.5.429</version>
+            <version>0.5.748</version>
         </dependency>
 
     </dependencies>
@@ -47,6 +47,11 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
+        </repository>
+
+        <repository>
+            <id>jetbrains-all</id>
+            <url>http://repository.jetbrains.com/all</url>
         </repository>
 
         <!-- use this repository for snapshot releases -->
