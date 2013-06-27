@@ -29,6 +29,10 @@ open class XmlWriter(val xml: XMLStreamWriter) {
         xml.writeEndElement()
     }
 
+    fun set(attr:String, value:String) {
+        xml.writeAttribute(attr, value)
+    }
+
     private fun writeStartElement(tag:String) {
         if ( !nsprefix.equals("") ) {
             val uri=nstable[nsprefix]
@@ -79,6 +83,8 @@ fun main(args: Array<String>) {
     val xml = writer(o) {
         ns("bpmn2", "http://www.omg.org/bpmn20")
         elem("process") {
+            set("id", "test")
+            set("isExecutable", "true")
             sorted.forEach {
                 elem("abc") {}
             }
