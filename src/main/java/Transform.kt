@@ -21,7 +21,7 @@ data class Transition(val name: String, val source: String, val target: String)
 
 val Element.parent: Element get() = this.getParentNode() as Element
 
-open class XmlWriter(val xml: XMLStreamWriter) {
+class XmlWriter(val xml: XMLStreamWriter) {
     val nstable = HashMap<String, String>()
     var nsprefix: String = "";
 
@@ -71,104 +71,140 @@ fun writer(out: Writer, init: XmlWriter.() -> Unit) {
     xml.close()
 }
 
-fun main(args: Array<String>) {
-    val doc = parseXml("workflow_sample.xml")
+class Transformer {
+    fun transform(out:String) {
+        val doc = parseXml("workflow_sample.xml")
 
-    val idx: HashSet<Transition> = HashSet<Transition>()
-    val states = HashSet<String>()
+        val idx: HashSet<Transition> = HashSet<Transition>()
+        val states = HashSet<String>()
 
-    doc.get("transition").forEach {
-        val name = it.attribute("name")
-        val source = it.parent.parent.attribute("name")
-        val target = it.attribute("target")
-        idx.add(Transition(name, source, target))
-        states.add(source)
-        states.add(target)
-    }
+        doc.get("transition").forEach {
+            val name = it.attribute("name")
+            val source = it.parent.parent.attribute("name")
+            val target = it.attribute("target")
+            idx.add(Transition(name, source, target))
+            states.add(source)
+            states.add(target)
+        }
 
-    val transitions = idx.sortBy { it -> "${it.name}/${it.source}/${it.target}" }
-    transitions.forEach {
-        println("name: ${it.name}, source: ${it.source}, target: ${it.target}")
-    }
+        val transitions = idx.sortBy { it -> "${it.name}/${it.source}/${it.target}" }
+        transitions.forEach {
+            println("name: ${it.name}, source: ${it.source}, target: ${it.target}")
+        }
 
-    val f = File("out.bpmn")
-    if ( f.exists() ) {
-        f.delete()
-    }
-    val o = FileWriter(f)
-    val xml = writer(o) {
-        ns("bpmn2", "http://www.omg.org/spec/BPMN/20100524/MODEL")
-        elem("definitions") {
-            set("xmlns", "http://www.omg.org/bpmn20")
-            set("targetNamespace", "http://www.omg.org/bpmn20")
-            elem("process") {
-                set("id", "test")
-                set("isExecutable", "true")
-                states.forEach {
-                    val state = it
-                    val elem = elemType(it, transitions)
-                    when (elem) {
-                        "endEvent", "manualTask" -> {
-                            val gateway = "$it..incoming"
-                            elem("exclusiveGateway") {
-                                set("id", gateway)
-                                set("gatewayDirection", "Converging")
-                                val list = transitions.filter { it.target == state } map { it.source }
-                                list.distinct() forEach {
-                                    elem("incoming") { text("$it..outgoing") }
-                                }
-                                elem("outgoing") {
-                                    text(it)
-                                }
-                            }
-                            elem("sequenceFlow") {
-                                set("id", "$it..in")
-                                set("sourceRef", gateway)
-                                set("targetRef", it)
-                            }
-                        }
-                        else -> {
-                        }
+        val f = File(out)
+        if ( f.exists() ) {
+            f.delete()
+        }
+        val o = FileWriter(f)
+        val xml = writer(o) {
+            ns("bpmn2", "http://www.omg.org/spec/BPMN/20100524/MODEL")
+            elem("definitions") {
+                set("xmlns", "http://www.omg.org/bpmn20")
+                set("targetNamespace", "http://www.omg.org/bpmn20")
+                elem("process") {
+                    set("id", "test")
+                    set("isExecutable", "true")
+
+                    elem("property") {
+                        set("id", "transition")
                     }
 
-                    elem(elem) {
-                        set("id", it)
-                        set("name", it)
-                    }
-
-                    when (elem) {
-                        "startEvent", "manualTask" -> {
-                            val gateway = "$it..outgoing"
-                            elem("sequenceFlow") {
-                                set("id", "$it..out")
-                                set("sourceRef", it)
-                                set("targetRef", gateway)
-                            }
-                            elem("exclusiveGateway") {
-                                set("id", gateway)
-                                set("gatewayDirection", "Diverging")
-                                elem("incoming") { text(it) }
-                                val list = transitions.filter { it.source == state } map { it.target }
-                                list.distinct() forEach {
-                                    elem("outgoing") { text("$it..incoming") }
+                    states.forEach {
+                        val state = it
+                        val elem = elemType(it, transitions)
+                        when (elem) {
+                            "endEvent", "manualTask" -> {
+                                val gateway = "$it..incoming"
+                                elem("exclusiveGateway") {
+                                    set("id", gateway)
+                                    set("name", gateway)
+                                    set("gatewayDirection", "Converging")
+                                    val list = transitions.filter { it.target == state } map { it.source }
+                                    list.distinct() forEach {
+                                        elem("incoming") { text("$it..outgoing") }
+                                    }
+                                    elem("outgoing") {
+                                        text(it)
+                                    }
+                                }
+                                elem("sequenceFlow") {
+                                    set("id", "$it..in")
+                                    set("name", "$it..in")
+                                    set("sourceRef", gateway)
+                                    set("targetRef", it)
                                 }
                             }
+                            else -> {
+                            }
                         }
-                        else -> {
+
+                        elem(elem) {
+                            set("id", it)
+                            set("name", it)
+
+                            when (elem) {
+                                "manualTask" -> {
+                                    elem("ioSpecification") {
+                                        elem("dataOutput") {
+                                            set("id", "${it}..result")
+                                            set("name", "transition")
+                                        }
+                                        elem("inputSet") {}
+                                        elem("outputSet") {
+                                            elem("dataOutputRefs") { text("${it}..result") }
+                                        }
+                                    }
+                                    elem("dataOutputAssociation") {
+                                        elem("sourceRef") { text("${it}..result") }
+                                        elem("targetRef") { text("transition") }
+                                    }
+                                }
+                                else -> {}
+                            }
+                        }
+
+                        when (elem) {
+                            "startEvent", "manualTask" -> {
+                                val gateway = "$it..outgoing"
+                                elem("sequenceFlow") {
+                                    set("id", "$it..out")
+                                    set("name", "$it..out")
+                                    set("sourceRef", it)
+                                    set("targetRef", gateway)
+                                }
+                                elem("exclusiveGateway") {
+                                    set("id", gateway)
+                                    set("name", gateway)
+                                    set("gatewayDirection", "Diverging")
+                                    elem("incoming") { text(it) }
+                                    val list = transitions.filter { it.source == state } map { it.target }
+                                    list.distinct() forEach {
+                                        elem("outgoing") { text("$it..incoming") }
+                                    }
+                                }
+                            }
+                            else -> {
+                            }
                         }
                     }
-                }
-                transitions.forEach {
-                    elem("sequenceFlow") {
-                        set("id", "${it.name}-${it.source}..${it.target}")
-                        set("sourceRef", "${it.source}..outgoing")
-                        set("targetRef", "${it.target}..incoming")
+                    transitions.forEach {
+                        elem("sequenceFlow") {
+                            set("id", "${it.name}-${it.source}..${it.target}")
+                            set("name", "${it.name}-${it.source}..${it.target}")
+                            set("sourceRef", "${it.source}..outgoing")
+                            set("targetRef", "${it.target}..incoming")
+
+                            elem("conditionExpression") {
+                                text("return \"${it.name}\".equals(transition)")
+                            }
+                        }
                     }
                 }
             }
         }
+        println(o.toString());
     }
-    println(o.toString());
 }
 
 fun <T> Collection<T>.distinct() : Collection<T> {

@@ -5,11 +5,15 @@ import org.drools.builder.KnowledgeBuilderFactory;
 import org.drools.builder.ResourceType;
 import org.drools.event.DefaultProcessEventListener;
 import org.drools.event.process.ProcessNodeTriggeredEvent;
+import org.drools.io.Resource;
 import org.drools.io.ResourceFactory;
 import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.process.*;
 import org.junit.Test;
+import transform.Transformer;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,4 +68,30 @@ public class BasicTests extends DefaultProcessEventListener implements org.drool
     @Override
     public void abortWorkItem(WorkItem workItem, WorkItemManager workItemManager) {
     }
+
+    @Test
+    public void maintest() {
+        Transformer t=new Transformer();
+        t.transform("out.bpmn");
+
+        KnowledgeBuilderConfiguration kbc = KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
+        KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder(kbc);
+
+        Resource resource = ResourceFactory.newFileResource("out.bpmn");
+        try {
+            kbuilder.add(resource, ResourceType.BPMN2);
+            KnowledgeBase kbase = kbuilder.newKnowledgeBase();
+
+            StatefulKnowledgeSession ksession = kbase.newStatefulKnowledgeSession();
+
+            ksession.getWorkItemManager().registerWorkItemHandler("Manual Task", this);
+            ksession.addEventListener(this);
+
+            ProcessInstance processInstance = ksession.startProcess("test");
+            System.out.println("Process state: " + processInstance.getState());
+        } finally {
+        }
+
+    }
 }
+
