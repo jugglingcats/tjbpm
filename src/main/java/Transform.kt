@@ -144,7 +144,7 @@ class Transformer {
                             set("name", it)
 
                             when (elem) {
-                                "manualTask" -> {
+                                "manualTask", "startEvent" -> {
                                     elem("ioSpecification") {
                                         elem("dataOutput") {
                                             set("id", "${it}..result")
@@ -165,7 +165,7 @@ class Transformer {
                         }
 
                         when (elem) {
-                            "startEvent", "manualTask" -> {
+                            "manualTask" -> {
                                 val gateway = "$it..outgoing"
                                 elem("sequenceFlow") {
                                     set("id", "$it..out")
