@@ -17,61 +17,28 @@ import java.util.HashMap
 import java.io.FileWriter
 import java.io.File
 
-data class Transition(val name: String, val source: String, val target: String)
-
-val Element.parent: Element get() = this.getParentNode() as Element
-
-class XmlWriter(val xml: XMLStreamWriter) {
-    val nstable = HashMap<String, String>()
-    var nsprefix: String = "";
-
-    fun elem(tag: String, init: XmlWriter.() -> Unit) {
-        writeStartElement(tag)
-        init()
-        xml.writeEndElement()
-    }
-
-    fun set(attr: String, value: String) {
-        xml.writeAttribute(attr, value)
-    }
-
-    fun text(text: String) {
-        xml.writeCharacters(text)
-    }
-
-    private fun writeStartElement(tag: String) {
-        if ( !nsprefix.equals("") ) {
-            val uri = nstable[nsprefix]
-            if ( xml.getPrefix(uri) == null ) {
-                xml.setPrefix(nsprefix, uri)
-                xml.writeStartElement(uri, tag)
-                xml.writeNamespace(nsprefix, uri)
-            } else {
-                xml.writeStartElement(uri, tag)
-            }
-        } else {
-            xml.writeStartElement(tag)
-        }
-    }
-    fun ns(prefix: String, namespace: String) {
-        nsprefix = prefix
-        if ( nstable.containsKey(prefix) ) {
-            return
-        }
-        nstable[prefix] = namespace
-    }
-}
-
-fun writer(out: Writer, init: XmlWriter.() -> Unit) {
-    val xml = IndentingXMLStreamWriter(XMLOutputFactory.newInstance()!!.createXMLStreamWriter(out)!!)
-    val writer = XmlWriter(xml)
-    xml.writeStartDocument()
-    writer.init()
-    xml.writeEndDocument()
-    xml.close()
-}
-
 class Transformer {
+    data class Transition(val name: String, val source: String, val target: String)
+
+    fun elemType(state: String, transitions: List<Transition>): String {
+        return if ( transitions.count { state == it.target } == 0 ) {
+            "startEvent"
+        } else if ( transitions.count { state == it.source } == 0 ) {
+            "endEvent"
+        } else {
+            "manualTask"
+        }
+    }
+
+    fun writer(out: Writer, init: XmlWriter.() -> Unit) {
+        val xml = IndentingXMLStreamWriter(XMLOutputFactory.newInstance()!!.createXMLStreamWriter(out)!!)
+        val writer = XmlWriter(xml)
+        xml.writeStartDocument()
+        writer.init()
+        xml.writeEndDocument()
+        xml.close()
+    }
+
     fun transform(out:String) {
         val doc = parseXml("workflow_sample.xml")
 
@@ -207,18 +174,3 @@ class Transformer {
     }
 }
 
-fun <T> Collection<T>.distinct() : Collection<T> {
-    val ret=HashSet<T>()
-    this.forEach { ret.add(it) }
-    return ret;
-}
-
-fun elemType(state: String, transitions: List<Transition>): String {
-    return if ( transitions.count { state == it.target } == 0 ) {
-        "startEvent"
-    } else if ( transitions.count { state == it.source } == 0 ) {
-        "endEvent"
-    } else {
-        "manualTask"
-    }
-}
