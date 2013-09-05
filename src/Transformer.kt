@@ -53,6 +53,8 @@ class Transformer {
             states.add(source)
             states.add(target)
         }
+        states.add("start--reserved")
+        idx.add(Transition("begin", "start--reserved", "pre-born"))
 
         val transitions = idx.sortBy { it -> "${it.name}/${it.source}/${it.target}" }
         transitions.forEach {
@@ -132,7 +134,7 @@ class Transformer {
                         }
 
                         when (elem) {
-                            "manualTask" -> {
+                            "startEvent", "manualTask" -> {
                                 val gateway = "$it..outgoing"
                                 elem("sequenceFlow") {
                                     set("id", "$it..out")
@@ -162,8 +164,14 @@ class Transformer {
                             set("sourceRef", "${it.source}..outgoing")
                             set("targetRef", "${it.target}..incoming")
 
-                            elem("conditionExpression") {
-                                text("return \"${it.name}\".equals(transition)")
+                            if ( it.source != "start--reserved" ) {
+                                elem("conditionExpression") {
+                                    text("return \"${it.name}\".equals(transition)")
+                                }
+                            } else {
+                                elem("conditionExpression") {
+                                    text("return true")
+                                }
                             }
                         }
                     }
