@@ -7,7 +7,7 @@ import workflow.WorkflowProcessJbpm;
 
 import java.io.FileNotFoundException;
 
-public class WorkflowTests extends Assert {
+public class TestAllWorkflows extends Assert {
     @AfterClass
     public static void shutdown() {
         WorkflowProcessActiviti.shutdown();
